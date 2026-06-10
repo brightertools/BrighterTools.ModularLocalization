@@ -1,4 +1,4 @@
-using BrighterTools.ModularLocalization.Abstractions;
+﻿using BrighterTools.ModularLocalization.Abstractions;
 using BrighterTools.ModularLocalization.Internal;
 using BrighterTools.ModularLocalization.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +12,7 @@ public static class LocalizationEntityFrameworkServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped<ILocalizationStore, EfLocalizationStore>();
+        services.AddScoped<ISupportedCultureService, EfSupportedCultureService>();
         services.AddHostedService<LocalizationStrictModeStartupCheck>();
 
         return services;

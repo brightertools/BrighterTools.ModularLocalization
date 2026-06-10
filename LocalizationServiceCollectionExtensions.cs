@@ -1,6 +1,7 @@
-using BrighterTools.ModularLocalization.Abstractions;
+﻿using BrighterTools.ModularLocalization.Abstractions;
 using BrighterTools.ModularLocalization.Caching;
 using BrighterTools.ModularLocalization.Internal;
+using BrighterTools.ModularLocalization.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BrighterTools.ModularLocalization;
@@ -25,6 +26,7 @@ public static class LocalizationServiceCollectionExtensions
 
         services.AddScoped<ICultureResolver, DefaultCultureResolver>();
         services.AddScoped<IModularLocalizer, ModularLocalizer>();
+        services.AddScoped<ILocalizationResourceService, LocalizationResourceService>();
 
         services.AddHostedService<LocalizationStoreRegistrationStartupCheck>();
         services.AddHostedService<LocalizationWarmupHostedService>();

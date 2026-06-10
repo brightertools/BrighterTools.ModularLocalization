@@ -20,6 +20,21 @@
     <Compile Remove="artifacts\**\*.cs" />
     <Compile Remove="obj\**\*.cs" />
     <Compile Remove="bin\**\*.cs" />
+    <None Remove="EntityFrameworkCore\**" />
+    <None Remove="tests\**" />
+    <None Remove="artifacts\**" />
+    <None Remove="obj\**" />
+    <None Remove="bin\**" />
+    <Content Remove="EntityFrameworkCore\**" />
+    <Content Remove="tests\**" />
+    <Content Remove="artifacts\**" />
+    <Content Remove="obj\**" />
+    <Content Remove="bin\**" />
+    <EmbeddedResource Remove="EntityFrameworkCore\**" />
+    <EmbeddedResource Remove="tests\**" />
+    <EmbeddedResource Remove="artifacts\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="bin\**" />
   </ItemGroup>
 
   <ItemGroup>

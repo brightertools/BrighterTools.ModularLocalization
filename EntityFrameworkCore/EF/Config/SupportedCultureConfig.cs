@@ -16,8 +16,11 @@ public sealed class SupportedCultureConfig : IEntityTypeConfiguration<SupportedC
         b.HasKey(x => x.Id);
 
         b.Property(x => x.CultureCode).IsRequired().HasMaxLength(10);
+        b.Property(x => x.DisplayName).IsRequired().HasMaxLength(100);
+        b.Property(x => x.NativeName).IsRequired().HasMaxLength(100);
         b.Property(x => x.IsEnabled).IsRequired();
         b.Property(x => x.IsDefault).IsRequired();
+        b.Property(x => x.SortOrder).IsRequired();
         b.Property(x => x.TenantId);
 
         b.Property(x => x.CreatedAtUtc).IsRequired();

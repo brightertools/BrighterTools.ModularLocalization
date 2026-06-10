@@ -1,11 +1,11 @@
-﻿using BrighterTools.ModularLocalization.EF.Config;
+using BrighterTools.ModularLocalization.EF.Config;
 using Microsoft.EntityFrameworkCore;
 
 namespace BrighterTools.ModularLocalization.EF;
 
 public static class ModelBuilderExtensions
 {
-    public static ModelBuilder ApplyModularLocalization(this ModelBuilder modelBuilder, string schemaName)
+    public static ModelBuilder ApplyModularLocalization(this ModelBuilder modelBuilder, string? schemaName)
     {
         var schema = string.IsNullOrWhiteSpace(schemaName) ? null : schemaName;
 
@@ -16,3 +16,4 @@ public static class ModelBuilderExtensions
         return modelBuilder;
     }
 }
+

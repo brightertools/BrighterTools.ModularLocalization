@@ -24,8 +24,9 @@ public sealed class TranslationValueConfig : IEntityTypeConfiguration<Translatio
         b.Property(x => x.CreatedAtUtc).IsRequired();
         b.Property(x => x.UpdatedAtUtc).IsRequired();
 
-        b.HasIndex(x => new { x.TranslationKeyId, x.Culture, x.PluralCategory, x.TenantId }).IsUnique();
+        b.HasIndex(x => new { x.TranslationKeyId, x.Culture, x.PluralCategory, x.TenantId }).IsUnique().HasFilter(null);
 
         b.HasIndex(x => new { x.Culture, x.TenantId });
     }
 }
+
