@@ -7,5 +7,10 @@ public interface ILocalizationStore
         Guid? tenantId,
         CancellationToken ct);
 
+    Task<LocalizationResourceSyncResult> SyncAutoRegisterKeysAsync(
+        Guid? tenantId,
+        IReadOnlyCollection<LocalizationResourceDefinition> resources,
+        CancellationToken ct);
+
     Task TryAutoRegisterKeyAsync(Guid? tenantId, string key, string defaultValue, CancellationToken ct);
 }

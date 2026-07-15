@@ -13,6 +13,7 @@ public static class LocalizationEntityFrameworkServiceCollectionExtensions
 
         services.AddScoped<ILocalizationStore, EfLocalizationStore>();
         services.AddScoped<ISupportedCultureService, EfSupportedCultureService>();
+        services.AddScoped<ILocalizationTranslationAdminService, EfLocalizationTranslationAdminService>();
         services.AddHostedService<LocalizationStrictModeStartupCheck>();
 
         return services;

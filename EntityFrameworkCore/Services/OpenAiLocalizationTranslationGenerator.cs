@@ -69,11 +69,20 @@ internal sealed class OpenAiLocalizationTranslationGenerator : ILocalizationTran
 
         var effectiveTenant = NormalizeTenant(request.TenantId);
         var keyPrefix = request.KeyStartsWith?.Trim();
+        var translationKeyIds = request.TranslationKeyIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToArray();
         var batchSize = request.BatchSize <= 0 ? 50 : request.BatchSize;
         var maxCandidates = _openAiOptions.MaxCandidatesPerRun <= 0 ? 2000 : _openAiOptions.MaxCandidatesPerRun;
 
         var keysQuery = _db.TranslationKeys
             .Where(k => k.TenantId == effectiveTenant);
+
+        if (translationKeyIds.Length > 0)
+        {
+            keysQuery = keysQuery.Where(k => translationKeyIds.Contains(k.Id));
+        }
 
         if (!string.IsNullOrWhiteSpace(keyPrefix))
         {
@@ -514,3 +523,4 @@ internal sealed class OpenAiLocalizationTranslationGenerator : ILocalizationTran
         }
     }
 }
+

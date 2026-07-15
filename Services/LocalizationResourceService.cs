@@ -48,28 +48,30 @@ internal sealed class LocalizationResourceService : ILocalizationResourceService
         string defaultValue,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(key))
+        await RegisterResourcesAsync(
+            [
+                new LocalizationResourceDefinition
+                {
+                    Key = key,
+                    DefaultValue = defaultValue
+                }
+            ],
+            ct).ConfigureAwait(false);
+    }
+
+    public async Task<LocalizationResourceSyncResult> RegisterResourcesAsync(
+        IReadOnlyCollection<LocalizationResourceDefinition> resources,
+        CancellationToken ct = default)
+    {
+        var result = await _store.SyncAutoRegisterKeysAsync(null, resources, ct).ConfigureAwait(false);
+
+        foreach (var culture in result.InvalidatedCultures
+                     .Where(x => !string.IsNullOrWhiteSpace(x))
+                     .Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            return;
+            await _cache.InvalidateAsync(null, culture.Trim(), ct).ConfigureAwait(false);
         }
 
-        var normalizedKey = key.Trim();
-        var normalizedDefaultValue = string.IsNullOrWhiteSpace(defaultValue)
-            ? normalizedKey
-            : defaultValue;
-
-        await _store.TryAutoRegisterKeyAsync(null, normalizedKey, normalizedDefaultValue, ct)
-            .ConfigureAwait(false);
-
-        var culturesToInvalidate = _options.WarmupCultures
-            .Append(_options.DefaultCulture)
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var culture in culturesToInvalidate)
-        {
-            await _cache.InvalidateAsync(null, culture, ct).ConfigureAwait(false);
-        }
+        return result;
     }
 }

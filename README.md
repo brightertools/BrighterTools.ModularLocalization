@@ -42,3 +42,8 @@ builder.Services.AddModularLocalizationOpenAiTranslation(options =>
 Full setup instructions (DbContext, model config, migrations, and usage):
 
 - [docs/integration.md](docs/integration.md)
+## More Documentation
+
+- [usage.md](usage.md) for consuming application guidance
+- [publishing.md](publishing.md) for NuGet packaging and publishing
+- [RELEASE_NOTES.md](RELEASE_NOTES.md) for release history

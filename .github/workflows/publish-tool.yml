@@ -1,0 +1,69 @@
+name: publish-tool
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Optional package version override (for example 1.0.1)
+        required: false
+        type: string
+      publish_to_nuget:
+        description: Publish the generated NuGet packages to nuget.org
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  pack-and-publish:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore ./BrighterTools.ModularLocalization.sln --configfile ./NuGet.config
+
+      - name: Build
+        run: dotnet build ./BrighterTools.ModularLocalization.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ./BrighterTools.ModularLocalization.sln --configuration Release --no-build --verbosity normal
+
+      - name: Pack NuGet packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_ARG=""
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION_ARG="/p:Version=${{ inputs.version }}"
+          fi
+          dotnet pack ./BrighterTools.ModularLocalization.csproj --configuration Release --no-build --output ./artifacts/nuget --configfile ./NuGet.config $VERSION_ARG
+          dotnet pack ./EntityFrameworkCore/BrighterTools.ModularLocalization.EntityFrameworkCore.csproj --configuration Release --no-build --output ./artifacts/nuget --configfile ./NuGet.config $VERSION_ARG
+
+      - name: Upload NuGet artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: brightertools-modularlocalization-nuget
+          path: ./artifacts/nuget/*
+          if-no-files-found: error
+
+      - name: NuGet login (OIDC to temp API key)
+        if: ${{ inputs.publish_to_nuget }}
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: brightertools
+
+      - name: Publish to NuGet with Trusted Publishing
+        if: ${{ inputs.publish_to_nuget }}
+        run: dotnet nuget push ./artifacts/nuget/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

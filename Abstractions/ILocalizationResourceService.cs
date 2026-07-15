@@ -11,4 +11,8 @@ public interface ILocalizationResourceService
         string key,
         string defaultValue,
         CancellationToken ct = default);
+
+    Task<LocalizationResourceSyncResult> RegisterResourcesAsync(
+        IReadOnlyCollection<LocalizationResourceDefinition> resources,
+        CancellationToken ct = default);
 }

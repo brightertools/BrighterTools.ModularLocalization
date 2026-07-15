@@ -58,111 +58,243 @@ internal sealed class EfLocalizationStore : ILocalizationStore
             values);
     }
 
-    public async Task TryAutoRegisterKeyAsync(
+    public Task TryAutoRegisterKeyAsync(Guid? tenantId, string key, string defaultValue, CancellationToken ct)
+        => SyncAutoRegisterKeysAsync(
+            tenantId,
+            [
+                new LocalizationResourceDefinition
+                {
+                    Key = key,
+                    DefaultValue = defaultValue
+                }
+            ],
+            ct);
+
+    public async Task<LocalizationResourceSyncResult> SyncAutoRegisterKeysAsync(
         Guid? tenantId,
-        string key,
-        string defaultValue,
+        IReadOnlyCollection<LocalizationResourceDefinition> resources,
         CancellationToken ct)
     {
+        var requestedCount = resources?.Count ?? 0;
         if (!_opt.AutoRegisterMissingKeys)
-            return;
+        {
+            return new LocalizationResourceSyncResult
+            {
+                RequestedCount = requestedCount,
+                SkippedCount = requestedCount
+            };
+        }
+
+        var normalizedResources = NormalizeResources(resources);
+        var result = new LocalizationResourceSyncResult
+        {
+            RequestedCount = requestedCount,
+            ProcessedCount = normalizedResources.Count,
+            SkippedCount = Math.Max(0, requestedCount - normalizedResources.Count)
+        };
+
+        if (normalizedResources.Count == 0)
+        {
+            return result;
+        }
 
         var effectiveTenant = NormalizeTenant(tenantId);
         var now = DateTime.UtcNow;
+        var resourceKeys = normalizedResources.Select(x => x.Key).ToList();
+        var initialExistingKeys = await LoadExistingKeySetAsync(resourceKeys, effectiveTenant, ct).ConfigureAwait(false);
 
-        var entity = new TranslationKey
-        {
-            Id = Guid.NewGuid(),
-            Key = key,
-            DefaultValue = defaultValue,
-            LastSeenDefaultValue = defaultValue,
-            TenantId = effectiveTenant,
-            CreatedAtUtc = now,
-            UpdatedAtUtc = now
-        };
+        await EnsureKeysExistAsync(normalizedResources, initialExistingKeys, effectiveTenant, now, ct).ConfigureAwait(false);
 
-        _db.TranslationKeys.Add(entity);
+        var trackedKeys = await LoadTrackedKeysAsync(resourceKeys, effectiveTenant, ct).ConfigureAwait(false);
+        result.CreatedCount = resourceKeys.Count(key => !initialExistingKeys.Contains(key) && trackedKeys.ContainsKey(key));
+        result.ExistingCount = Math.Max(0, result.ProcessedCount - result.CreatedCount);
 
-        try
-        {
-            await SyncBaseCultureValueAsync(entity, defaultValue, effectiveTenant, now, ct)
-                .ConfigureAwait(false);
-            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-            return;
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogDebug(ex,
-                "Auto-register race for key {Key} tenant {TenantId}",
-                key, effectiveTenant);
-
-            if (_db is DbContext efContext)
-            {
-                efContext.Entry(entity).State = EntityState.Detached;
-            }
-        }
-
-        var existing = await _db.TranslationKeys
-            .FirstOrDefaultAsync(k =>
-                k.Key == key &&
-                k.TenantId == effectiveTenant,
-                ct)
-            .ConfigureAwait(false);
-
-        if (existing == null)
-            return;
-
-        var hasChanges = false;
-
-        if (!string.Equals(existing.LastSeenDefaultValue, defaultValue, StringComparison.Ordinal))
-        {
-            existing.LastSeenDefaultValue = defaultValue;
-            existing.UpdatedAtUtc = now;
-            hasChanges = true;
-        }
-
-        hasChanges |= await SyncBaseCultureValueAsync(existing, defaultValue, effectiveTenant, now, ct)
-            .ConfigureAwait(false);
-
-        if (!hasChanges)
-            return;
-
-        try
-        {
-            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogDebug(ex,
-                "Concurrent update race for key {Key} tenant {TenantId}",
-                key, effectiveTenant);
-        }
+        var syncOutcome = await ApplyDefaultSyncAsync(normalizedResources, trackedKeys, effectiveTenant, now, ct).ConfigureAwait(false);
+        result.UpdatedDefaultsCount = syncOutcome.UpdatedDefaultsCount;
+        result.InvalidatedCultures = syncOutcome.InvalidatedCultures;
+        return result;
     }
 
-    private async Task<bool> SyncBaseCultureValueAsync(
-        TranslationKey key,
-        string defaultValue,
+    private async Task<HashSet<string>> LoadExistingKeySetAsync(
+        IReadOnlyCollection<string> resourceKeys,
+        Guid effectiveTenant,
+        CancellationToken ct)
+    {
+        var existingKeys = await _db.TranslationKeys
+            .AsNoTracking()
+            .Where(k => k.TenantId == effectiveTenant && resourceKeys.Contains(k.Key))
+            .Select(k => k.Key)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return new HashSet<string>(existingKeys, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task EnsureKeysExistAsync(
+        IReadOnlyCollection<LocalizationResourceDefinition> resources,
+        HashSet<string> existingKeys,
         Guid effectiveTenant,
         DateTime now,
         CancellationToken ct)
     {
+        var missingResources = resources
+            .Where(resource => !existingKeys.Contains(resource.Key))
+            .ToList();
+
+        if (missingResources.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var resource in missingResources)
+        {
+            _db.TranslationKeys.Add(new TranslationKey
+            {
+                Id = Guid.NewGuid(),
+                Key = resource.Key,
+                DefaultValue = resource.DefaultValue,
+                LastSeenDefaultValue = resource.DefaultValue,
+                TenantId = effectiveTenant,
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now
+            });
+        }
+
+        try
+        {
+            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogDebug(ex,
+                "Auto-register race for keys {Keys} tenant {TenantId}",
+                string.Join(", ", missingResources.Select(resource => resource.Key)),
+                effectiveTenant);
+            ClearChangeTracker();
+        }
+    }
+
+    private async Task<Dictionary<string, TranslationKey>> LoadTrackedKeysAsync(
+        IReadOnlyCollection<string> resourceKeys,
+        Guid effectiveTenant,
+        CancellationToken ct)
+    {
+        var trackedKeys = await _db.TranslationKeys
+            .Where(k => k.TenantId == effectiveTenant && resourceKeys.Contains(k.Key))
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return trackedKeys.ToDictionary(key => key.Key, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<LocalizationResourceSyncResult> ApplyDefaultSyncAsync(
+        IReadOnlyCollection<LocalizationResourceDefinition> resources,
+        Dictionary<string, TranslationKey> trackedKeys,
+        Guid effectiveTenant,
+        DateTime now,
+        CancellationToken ct)
+    {
+        var baseCulture = _opt.DefaultCulture.Trim();
+
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            trackedKeys = await LoadTrackedKeysAsync(resources.Select(resource => resource.Key).ToList(), effectiveTenant, ct)
+                .ConfigureAwait(false);
+
+            var trackedKeyIds = trackedKeys.Values.Select(key => key.Id).ToList();
+            var trackedBaseValues = await _db.TranslationValues
+                .Where(value =>
+                    trackedKeyIds.Contains(value.TranslationKeyId) &&
+                    value.TenantId == effectiveTenant &&
+                    value.PluralCategory == null &&
+                    value.Culture == baseCulture)
+                .ToDictionaryAsync(value => value.TranslationKeyId, ct)
+                .ConfigureAwait(false);
+
+            var hasChanges = false;
+            var updatedDefaultsCount = 0;
+            var invalidatedCultures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var resource in resources)
+            {
+                if (!trackedKeys.TryGetValue(resource.Key, out var trackedKey))
+                {
+                    continue;
+                }
+
+                var resourceChanged = false;
+
+                if (!string.Equals(trackedKey.LastSeenDefaultValue, resource.DefaultValue, StringComparison.Ordinal))
+                {
+                    trackedKey.LastSeenDefaultValue = resource.DefaultValue;
+                    trackedKey.UpdatedAtUtc = now;
+                    hasChanges = true;
+                    resourceChanged = true;
+                }
+
+                if (SyncBaseCultureValue(trackedKey, trackedBaseValues, resource.DefaultValue, effectiveTenant, baseCulture, now))
+                {
+                    hasChanges = true;
+                    resourceChanged = true;
+                    invalidatedCultures.Add(baseCulture);
+                }
+
+                if (resourceChanged)
+                {
+                    updatedDefaultsCount++;
+                }
+            }
+
+            if (!hasChanges)
+            {
+                return new LocalizationResourceSyncResult
+                {
+                    InvalidatedCultures = []
+                };
+            }
+
+            try
+            {
+                await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+                return new LocalizationResourceSyncResult
+                {
+                    UpdatedDefaultsCount = updatedDefaultsCount,
+                    InvalidatedCultures = invalidatedCultures.ToList()
+                };
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogDebug(ex,
+                    "Concurrent localization sync race for keys {Keys} tenant {TenantId}",
+                    string.Join(", ", resources.Select(resource => resource.Key)),
+                    effectiveTenant);
+
+                ClearChangeTracker();
+
+                if (attempt == 1)
+                {
+                    return new LocalizationResourceSyncResult();
+                }
+            }
+        }
+
+        return new LocalizationResourceSyncResult();
+    }
+
+    private bool SyncBaseCultureValue(
+        TranslationKey key,
+        IDictionary<Guid, TranslationValue> trackedBaseValues,
+        string defaultValue,
+        Guid effectiveTenant,
+        string baseCulture,
+        DateTime now)
+    {
         if (_opt.BaseCultureValueSyncMode == BaseCultureValueSyncMode.Never)
             return false;
 
-        var baseCulture = _opt.DefaultCulture.Trim();
-
-        var existing = await _db.TranslationValues
-            .FirstOrDefaultAsync(v =>
-                v.TranslationKeyId == key.Id &&
-                v.TenantId == effectiveTenant &&
-                v.PluralCategory == null &&
-                v.Culture == baseCulture,
-                ct)
-            .ConfigureAwait(false);
-
-        if (existing == null)
+        if (!trackedBaseValues.TryGetValue(key.Id, out var existing))
         {
-            _db.TranslationValues.Add(new TranslationValue
+            var value = new TranslationValue
             {
                 Id = Guid.NewGuid(),
                 TranslationKeyId = key.Id,
@@ -173,8 +305,10 @@ internal sealed class EfLocalizationStore : ILocalizationStore
                 TenantId = effectiveTenant,
                 CreatedAtUtc = now,
                 UpdatedAtUtc = now
-            });
+            };
 
+            _db.TranslationValues.Add(value);
+            trackedBaseValues[key.Id] = value;
             return true;
         }
 
@@ -188,6 +322,46 @@ internal sealed class EfLocalizationStore : ILocalizationStore
         existing.IsMachineTranslated = false;
         existing.UpdatedAtUtc = now;
         return true;
+    }
+
+    private static List<LocalizationResourceDefinition> NormalizeResources(
+        IReadOnlyCollection<LocalizationResourceDefinition>? resources)
+    {
+        if (resources == null || resources.Count == 0)
+        {
+            return [];
+        }
+
+        var normalized = new Dictionary<string, LocalizationResourceDefinition>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var resource in resources)
+        {
+            if (resource == null || string.IsNullOrWhiteSpace(resource.Key))
+            {
+                continue;
+            }
+
+            var normalizedKey = resource.Key.Trim();
+            var normalizedDefaultValue = string.IsNullOrWhiteSpace(resource.DefaultValue)
+                ? normalizedKey
+                : resource.DefaultValue.Trim();
+
+            normalized[normalizedKey] = new LocalizationResourceDefinition
+            {
+                Key = normalizedKey,
+                DefaultValue = normalizedDefaultValue
+            };
+        }
+
+        return normalized.Values.ToList();
+    }
+
+    private void ClearChangeTracker()
+    {
+        if (_db is DbContext dbContext)
+        {
+            dbContext.ChangeTracker.Clear();
+        }
     }
 
     private Guid NormalizeTenant(Guid? tenantId)

@@ -1,4 +1,4 @@
-﻿using BrighterTools.ModularLocalization;
+using BrighterTools.ModularLocalization;
 using BrighterTools.ModularLocalization.Abstractions;
 using BrighterTools.ModularLocalization.Caching;
 using BrighterTools.ModularLocalization.Internal;
@@ -68,8 +68,7 @@ internal sealed class ModularLocalizer : IModularLocalizer
 
             if (_opt.AutoRegisterMissingKeys)
             {
-                await _store.TryAutoRegisterKeyAsync(null, key, defaultValue, CancellationToken.None);
-                await _cache.InvalidateAsync(null, culture, CancellationToken.None);
+                await _store.TryAutoRegisterKeyAsync(null, key, defaultValue, CancellationToken.None).ConfigureAwait(false);
             }
 
             return defaultValue;
@@ -110,8 +109,7 @@ internal sealed class ModularLocalizer : IModularLocalizer
 
                 if (_opt.AutoRegisterMissingKeys)
                 {
-                    await _store.TryAutoRegisterKeyAsync(null, key, defaultOther, CancellationToken.None);
-                    await _cache.InvalidateAsync(null, culture, CancellationToken.None);
+                    await _store.TryAutoRegisterKeyAsync(null, key, defaultOther, CancellationToken.None).ConfigureAwait(false);
                 }
 
                 template = defaultValue;
