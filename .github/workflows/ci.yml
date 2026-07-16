@@ -26,6 +26,9 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
+      - name: Install latest npm
+        run: npm install -g npm@latest
+
       - name: Restore
         run: dotnet restore ./BrighterTools.ModularLocalization.sln --configfile ./NuGet.config
 

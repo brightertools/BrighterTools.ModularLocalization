@@ -42,6 +42,9 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
+      - name: Install latest npm
+        run: npm install -g npm@latest
+
       - name: Log toolchain versions
         run: |
           dotnet --version
