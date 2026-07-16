@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  build-test:
+  build-test-pack:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,8 +20,14 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          package-manager-cache: false
+
       - name: Restore
-        run: dotnet restore ./BrighterTools.ModularLocalization.sln
+        run: dotnet restore ./BrighterTools.ModularLocalization.sln --configfile ./NuGet.config
 
       - name: Build
         run: dotnet build ./BrighterTools.ModularLocalization.sln --configuration Release --no-restore
@@ -31,5 +37,22 @@ jobs:
 
       - name: Pack NuGet packages
         run: |
-          dotnet pack ./BrighterTools.ModularLocalization.csproj --configuration Release --no-build -o ./artifacts
-          dotnet pack ./EntityFrameworkCore/BrighterTools.ModularLocalization.EntityFrameworkCore.csproj --configuration Release --no-build -o ./artifacts
+          dotnet pack ./BrighterTools.ModularLocalization.csproj --configuration Release --no-build -o ./artifacts/nuget --configfile ./NuGet.config
+          dotnet pack ./EntityFrameworkCore/BrighterTools.ModularLocalization.EntityFrameworkCore.csproj --configuration Release --no-build -o ./artifacts/nuget --configfile ./NuGet.config
+          dotnet pack ./ModularLocalization.Redis/BrighterTools.ModularLocalization.Redis.csproj --configuration Release --no-build -o ./artifacts/nuget --configfile ./NuGet.config
+
+      - name: Install React dependencies
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm install
+
+      - name: Test React package
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm test
+
+      - name: Build React package
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm run build
+
+      - name: Pack React package dry run
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm pack --dry-run

@@ -12,6 +12,11 @@ on:
         required: true
         default: false
         type: boolean
+      publish_to_npm:
+        description: Publish the React companion package to npm
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   pack-and-publish:
@@ -29,6 +34,19 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Log toolchain versions
+        run: |
+          dotnet --version
+          node --version
+          npm --version
 
       - name: Restore
         run: dotnet restore ./BrighterTools.ModularLocalization.sln --configfile ./NuGet.config
@@ -49,6 +67,7 @@ jobs:
           fi
           dotnet pack ./BrighterTools.ModularLocalization.csproj --configuration Release --no-build --output ./artifacts/nuget --configfile ./NuGet.config $VERSION_ARG
           dotnet pack ./EntityFrameworkCore/BrighterTools.ModularLocalization.EntityFrameworkCore.csproj --configuration Release --no-build --output ./artifacts/nuget --configfile ./NuGet.config $VERSION_ARG
+          dotnet pack ./ModularLocalization.Redis/BrighterTools.ModularLocalization.Redis.csproj --configuration Release --no-build --output ./artifacts/nuget --configfile ./NuGet.config $VERSION_ARG
 
       - name: Upload NuGet artifacts
         uses: actions/upload-artifact@v4
@@ -56,6 +75,22 @@ jobs:
           name: brightertools-modularlocalization-nuget
           path: ./artifacts/nuget/*
           if-no-files-found: error
+
+      - name: Install React dependencies
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm install
+
+      - name: Test React package
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm test
+
+      - name: Build React package
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm run build
+
+      - name: Pack React package dry run
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm pack --dry-run
 
       - name: NuGet login (OIDC to temp API key)
         if: ${{ inputs.publish_to_nuget }}
@@ -67,3 +102,8 @@ jobs:
       - name: Publish to NuGet with Trusted Publishing
         if: ${{ inputs.publish_to_nuget }}
         run: dotnet nuget push ./artifacts/nuget/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Publish React companion to npm with Trusted Publishing
+        if: ${{ inputs.publish_to_npm }}
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm publish --provenance

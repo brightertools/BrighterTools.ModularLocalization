@@ -23,13 +23,14 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <VersionPrefix>1.0.1</VersionPrefix>
-    <PackageReleaseNotes>v1.0.1 - Translation administration and publishing updates
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <PackageReleaseNotes>v1.0.0 - Initial release
 
 Included:
-- Added translation administration and resource sync service contracts.
-- Prepared NuGet trusted publishing workflow metadata for both packages.
-- Aligned package metadata for the 1.0.1 patch release.
+- Core localization abstractions and orchestration.
+- Entity Framework Core persistence integration.
+- Redis cache integration for localized resources.
+- React companion administration package.
 
 Breaking changes:
 - None.</PackageReleaseNotes>

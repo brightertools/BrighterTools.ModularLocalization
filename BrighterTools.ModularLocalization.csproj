@@ -16,21 +16,25 @@
 
   <ItemGroup>
     <Compile Remove="EntityFrameworkCore\**\*.cs" />
+    <Compile Remove="ModularLocalization.Redis\**\*.cs" />
     <Compile Remove="tests\**\*.cs" />
     <Compile Remove="artifacts\**\*.cs" />
     <Compile Remove="obj\**\*.cs" />
     <Compile Remove="bin\**\*.cs" />
     <None Remove="EntityFrameworkCore\**" />
+    <None Remove="ModularLocalization.Redis\**" />
     <None Remove="tests\**" />
     <None Remove="artifacts\**" />
     <None Remove="obj\**" />
     <None Remove="bin\**" />
     <Content Remove="EntityFrameworkCore\**" />
+    <Content Remove="ModularLocalization.Redis\**" />
     <Content Remove="tests\**" />
     <Content Remove="artifacts\**" />
     <Content Remove="obj\**" />
     <Content Remove="bin\**" />
     <EmbeddedResource Remove="EntityFrameworkCore\**" />
+    <EmbeddedResource Remove="ModularLocalization.Redis\**" />
     <EmbeddedResource Remove="tests\**" />
     <EmbeddedResource Remove="artifacts\**" />
     <EmbeddedResource Remove="obj\**" />

@@ -1,49 +1,40 @@
 # BrighterTools.ModularLocalization
 
-React/C# modular localization with a split architecture:
+`BrighterTools.ModularLocalization` provides modular localization building blocks for BrighterTools-style applications: runtime localization services, EF Core persistence, optional Redis-backed caching, and a React companion administration package.
 
-- `BrighterTools.ModularLocalization`: core runtime + abstractions
-- `BrighterTools.ModularLocalization.EntityFrameworkCore`: EF Core storage adapter
-- Optional built-in OpenAI translation generator (filterable by culture/key prefix)
+The host application owns translation persistence, localization discovery, admin endpoint authorization, provider credentials, migrations, and deployment-specific cache configuration. The libraries own the reusable contracts, orchestration, persistence helpers, cache integration, and typed React administration surface.
 
-## Quick Start
+## Packages
 
-1. Register core:
-
-```csharp
-builder.Services.AddModularLocalization(options =>
-{
-    options.DefaultCulture = "en";
-    options.BaseCultureValueSyncMode = BaseCultureValueSyncMode.IfMissing;
-});
+```powershell
+dotnet add package BrighterTools.ModularLocalization
+dotnet add package BrighterTools.ModularLocalization.EntityFrameworkCore
+dotnet add package BrighterTools.ModularLocalization.Redis
+npm install @brightertools/modular-localization-react
 ```
 
-2. If using EF Core, register adapter:
+## Repository Layout
 
-```csharp
-builder.Services.AddModularLocalizationEntityFramework();
+- `BrighterTools.ModularLocalization.csproj` - core runtime package and service contracts
+- `EntityFrameworkCore` - EF Core storage and administration services
+- `ModularLocalization.Redis` - Redis cache integration package
+- `react/brightertools-modular-localization-react` - React companion admin package
+- `docs/integration.md` - end-to-end host application integration guide
+
+## Documentation
+
+- [usage.md](./usage.md) for consuming application guidance
+- [publishing.md](./publishing.md) for maintainer release steps
+- [docs/integration.md](./docs/integration.md) for DbContext, model, migration, and runtime integration
+- [RELEASE_NOTES.md](./RELEASE_NOTES.md) for release history
+
+## Validation
+
+```powershell
+dotnet test .\BrighterTools.ModularLocalization.sln -c Release
+cd .\react\brightertools-modular-localization-react
+npm install
+npm test
+npm run build
+npm run pack:dry-run
 ```
-
-3. Implement and register `ILocalizationDbContext` in your app DbContext.
-
-4. Optional: register OpenAI translation generator.
-
-```csharp
-builder.Services.AddModularLocalizationOpenAiTranslation(options =>
-{
-    options.ApiKey = configuration["OpenAI:ApiKey"] ?? "";
-    options.Model = "gpt-4.1-mini";
-    options.MaxCandidatesPerRun = 2000;
-});
-```
-
-## Integration Guide
-
-Full setup instructions (DbContext, model config, migrations, and usage):
-
-- [docs/integration.md](docs/integration.md)
-## More Documentation
-
-- [usage.md](usage.md) for consuming application guidance
-- [publishing.md](publishing.md) for NuGet packaging and publishing
-- [RELEASE_NOTES.md](RELEASE_NOTES.md) for release history

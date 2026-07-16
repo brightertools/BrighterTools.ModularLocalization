@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>BrighterTools.ModularLocalization.Redis</PackageId>
+    <Title>BrighterTools.ModularLocalization.Redis</Title>
+    <RootNamespace>BrighterTools.ModularLocalization.Redis</RootNamespace>
+    <Description>Redis cache integration for BrighterTools.ModularLocalization.</Description>
+    <PackageTags>localization;i18n;redis;cache;translations</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="2.11.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BrighterTools.ModularLocalization.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

@@ -1,31 +1,16 @@
-# v1.0.1 - Translation Administration and Publishing Updates
-
-## Summary
-
-Patch release with translation administration/resource sync service contracts and NuGet publishing workflow support.
-
-## Included
-
-- Added translation administration and resource sync service contracts.
-- Added NuGet Trusted Publishing workflow support for both packages.
-- Bumped package metadata for the 1.0.1 patch release.
-
-## Breaking Changes
-
-- None.
-
 # v1.0.0 - Initial Release
 
 ## Summary
 
-Initial stable release of the package.
+Initial stable release of the ModularLocalization package family.
 
 ## Included
 
-- Core package functionality.
-- Initial public API.
-- Documentation and usage examples.
-- NuGet packaging support.
+- `BrighterTools.ModularLocalization` core runtime, resource sync, localizer, pluralization, and culture fallback contracts.
+- `BrighterTools.ModularLocalization.EntityFrameworkCore` persistence, supported-culture management, translation administration, and optional OpenAI translation generation.
+- `BrighterTools.ModularLocalization.Redis` Redis cache integration.
+- `@brightertools/modular-localization-react` React companion administration components and typed API adapter contracts.
+- MIT-0 package metadata and Trusted Publishing-ready GitHub Actions workflows.
 
 ## Breaking Changes
 

@@ -9,6 +9,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EntityFrameworkCore", "Enti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrighterTools.ModularLocalization.EntityFrameworkCore", "EntityFrameworkCore\BrighterTools.ModularLocalization.EntityFrameworkCore.csproj", "{713AD30A-A8A8-44E0-BD4A-7C06EF1D9D17}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ModularLocalization.Redis", "ModularLocalization.Redis", "{716CD926-3F81-CEB6-F670-3A8CB7A90555}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrighterTools.ModularLocalization.Redis", "ModularLocalization.Redis\BrighterTools.ModularLocalization.Redis.csproj", "{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,11 +47,24 @@ Global
 		{713AD30A-A8A8-44E0-BD4A-7C06EF1D9D17}.Release|x64.Build.0 = Release|Any CPU
 		{713AD30A-A8A8-44E0-BD4A-7C06EF1D9D17}.Release|x86.ActiveCfg = Release|Any CPU
 		{713AD30A-A8A8-44E0-BD4A-7C06EF1D9D17}.Release|x86.Build.0 = Release|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Debug|x64.Build.0 = Debug|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Debug|x86.Build.0 = Debug|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Release|x64.ActiveCfg = Release|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Release|x64.Build.0 = Release|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Release|x86.ActiveCfg = Release|Any CPU
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{713AD30A-A8A8-44E0-BD4A-7C06EF1D9D17} = {17862433-4861-C37B-626A-FA0EB1A4B25A}
+		{D265CA5E-805C-4EBB-99B5-932B1AD6ECE7} = {716CD926-3F81-CEB6-F670-3A8CB7A90555}
 	EndGlobalSection
 EndGlobal
