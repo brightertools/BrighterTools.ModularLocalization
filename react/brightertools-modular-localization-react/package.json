@@ -6,7 +6,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BrighterTools/BrighterTools.ModularLocalization.git",
+    "url": "git+https://github.com/brightertools/BrighterTools.ModularLocalization.git",
     "directory": "react/brightertools-modular-localization-react"
   },
   "homepage": "https://github.com/BrighterTools/BrighterTools.ModularLocalization#readme",
