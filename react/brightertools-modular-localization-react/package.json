@@ -1,6 +1,6 @@
 {
   "name": "@brightertools/modular-localization-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React companion localization administration components for BrighterTools.ModularLocalization.",
   "license": "MIT-0",
   "type": "module",
@@ -23,14 +23,14 @@
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
-    "@testing-library/react": "^16.3.0",
-    "@types/react": "^18.3.24",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
-    "jsdom": "^26.1.0",
+    "jsdom": "^30.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

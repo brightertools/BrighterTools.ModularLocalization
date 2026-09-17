@@ -52,7 +52,7 @@ jobs:
           npm --version
 
       - name: Restore
-        run: dotnet restore ./BrighterTools.ModularLocalization.sln --configfile ./NuGet.config
+        run: dotnet restore ./BrighterTools.ModularLocalization.sln --configfile ./NuGet.config -p:NuGetAuditMode=all -warnaserror:NU1901,NU1902,NU1903,NU1904
 
       - name: Build
         run: dotnet build ./BrighterTools.ModularLocalization.sln --configuration Release --no-restore
@@ -81,7 +81,7 @@ jobs:
 
       - name: Install React dependencies
         working-directory: ./react/brightertools-modular-localization-react
-        run: npm install
+        run: npm ci
 
       - name: Test React package
         working-directory: ./react/brightertools-modular-localization-react
@@ -94,6 +94,10 @@ jobs:
       - name: Pack React package dry run
         working-directory: ./react/brightertools-modular-localization-react
         run: npm pack --dry-run
+
+      - name: Audit React dependencies
+        working-directory: ./react/brightertools-modular-localization-react
+        run: npm audit --audit-level=low
 
       - name: NuGet login (OIDC to temp API key)
         if: ${{ inputs.publish_to_nuget }}

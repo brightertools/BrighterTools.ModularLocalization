@@ -23,17 +23,8 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <VersionPrefix>1.0.0</VersionPrefix>
-    <PackageReleaseNotes>v1.0.0 - Initial release
-
-Included:
-- Core localization abstractions and orchestration.
-- Entity Framework Core persistence integration.
-- Redis cache integration for localized resources.
-- React companion administration package.
-
-Breaking changes:
-- None.</PackageReleaseNotes>
+    <VersionPrefix>1.0.1</VersionPrefix>
+    <PackageReleaseNotes>v1.0.1 - Serviced dependencies and release readiness. SQL Server defaults unchanged; no new production SQLite support.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
